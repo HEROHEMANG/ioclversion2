@@ -22,6 +22,7 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 
 Route::get('/routes', [JourneyRouteController::class, 'index']);
 Route::get('/routes/{journeyRoute}', [JourneyRouteController::class, 'show']);
+Route::post('/routes', [JourneyRouteController::class, 'store']);
 
 // OCR API Routes
 Route::post('/ocr/extract', [OcrController::class, 'extractText']);

@@ -168,8 +168,7 @@ document.addEventListener('DOMContentLoaded', function() {
         e.preventDefault();
         
         // Check if file is selected
-        const fileInput = document.getElementById('image');
-        if (!fileInput.files || fileInput.files.length === 0) {
+        if (!imageInput.files || imageInput.files.length === 0) {
             showError('Please select an image file first');
             return;
         }
@@ -185,7 +184,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         try {
             // Debug: Log what we're sending
-            console.log('File input files:', fileInput.files);
+            console.log('File input files:', imageInput.files);
             console.log('FormData contents:');
             for (let [key, value] of formData.entries()) {
                 console.log(key, value);

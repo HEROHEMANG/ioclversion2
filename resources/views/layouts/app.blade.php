@@ -8,6 +8,7 @@
 	<script src="https://cdn.tailwindcss.com"></script>
 	<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="anonymous"/>
 	<link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.css"/>
+	<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css"/>
 	<link rel="preconnect" href="https://fonts.googleapis.com">
 	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 	<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
@@ -23,6 +24,31 @@
 		.card-hover:hover { transform: translateY(-4px); box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04); }
 		img { image-rendering: -webkit-optimize-contrast; image-rendering: high-quality; }
 		.logo-img { image-rendering: auto; image-rendering: crisp-edges; image-rendering: -webkit-optimize-contrast; }
+		/* Choices.js custom styling to match Tailwind */
+		.choices__inner {
+			background-color: white;
+			border: 1px solid #d1d5db;
+			border-radius: 0.5rem;
+			padding: 0.5rem 0.75rem;
+			min-height: auto;
+		}
+		.choices__input {
+			background-color: transparent;
+			margin-bottom: 0;
+			padding: 0;
+		}
+		.choices__list--dropdown {
+			border: 1px solid #d1d5db;
+			border-radius: 0.5rem;
+			margin-top: 0.25rem;
+		}
+		.choices__item--selectable.is-highlighted {
+			background-color: #eef2ff;
+		}
+		.choices__placeholder {
+			opacity: 1;
+			color: #6b7280;
+		}
 	</style>
 </head>
 <body class="min-h-screen bg-white text-gray-900">
@@ -36,6 +62,7 @@
 					</a>
 					<div class="hidden md:flex items-center gap-6">
 						<a href="{{ url('/') }}" class="text-sm font-medium {{ request()->is('/') || request()->is('home') ? 'text-indigo-600' : 'text-gray-600 hover:text-indigo-600' }}">Home</a>
+						<a href="{{ route('add-route') }}" class="text-sm font-medium {{ request()->is('add-route') ? 'text-indigo-600' : 'text-gray-600 hover:text-indigo-600' }}">Add Route</a>
 						<a href="{{ route('ocr.index') }}" class="text-sm font-medium {{ request()->is('ocr*') ? 'text-indigo-600' : 'text-gray-600 hover:text-indigo-600' }}">OCR Tool</a>
 						<a href="{{ url('/contact') }}" class="text-sm font-medium {{ request()->is('contact') ? 'text-indigo-600' : 'text-gray-600 hover:text-indigo-600' }}">Contact</a>
 					</div>
@@ -47,6 +74,7 @@
 			<div id="mobile-menu" class="md:hidden hidden border-t border-gray-200">
 				<div class="space-y-1 px-4 py-3">
 					<a href="{{ url('/') }}" class="block rounded px-3 py-2 text-base font-medium {{ request()->is('/') || request()->is('home') ? 'bg-indigo-50 text-indigo-600' : 'text-gray-600 hover:bg-gray-50 hover:text-indigo-600' }}">Home</a>
+					<a href="{{ route('add-route') }}" class="block rounded px-3 py-2 text-base font-medium {{ request()->is('add-route') ? 'bg-indigo-50 text-indigo-600' : 'text-gray-600 hover:bg-gray-50 hover:text-indigo-600' }}">Add Route</a>
 					<a href="{{ route('ocr.index') }}" class="block rounded px-3 py-2 text-base font-medium {{ request()->is('ocr*') ? 'bg-indigo-50 text-indigo-600' : 'text-gray-600 hover:bg-gray-50 hover:text-indigo-600' }}">OCR Tool</a>
 					<a href="{{ url('/contact') }}" class="block rounded px-3 py-2 text-base font-medium {{ request()->is('contact') ? 'bg-indigo-50 text-indigo-600' : 'text-gray-600 hover:bg-gray-50 hover:text-indigo-600' }}">Contact</a>
 				</div>
@@ -74,6 +102,7 @@
 					<h3 class="text-white font-semibold mb-3 sm:mb-4 text-sm sm:text-base">Quick Links</h3>
 					<div class="space-y-2">
 						<a href="{{ url('/') }}" class="block text-indigo-100 hover:text-white transition-colors text-xs sm:text-sm">Home</a>
+						<a href="{{ route('add-route') }}" class="block text-indigo-100 hover:text-white transition-colors text-xs sm:text-sm">Add Route</a>
 						<a href="{{ route('routes.comparison') }}" class="block text-indigo-100 hover:text-white transition-colors text-xs sm:text-sm">Route Comparison</a>
 						<a href="{{ route('ocr.index') }}" class="block text-indigo-100 hover:text-white transition-colors text-xs sm:text-sm">OCR Tool</a>
 					</div>
@@ -95,6 +124,7 @@
 
 	<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 	<script src="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.min.js"></script>
+	<script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
 	<script>
 		const btn = document.getElementById('navToggle');
 		const menu = document.getElementById('mobile-menu');

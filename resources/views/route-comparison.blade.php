@@ -142,9 +142,9 @@
                                                 [{{ number_format(is_array($emergency['coords']) ? (float)$emergency['coords'][0] : 0, 6) }}, {{ number_format(is_array($emergency['coords']) ? (float)$emergency['coords'][1] : 0, 6) }}]
                                             </span>
                                             <div class="mt-1">
-                                                <span class="inline-block bg-blue-100 text-blue-800 text-xs px-2 py-0.5 rounded-full font-semibold">{{ $emergency['type'] }}</span>
+                                                <span class="inline-block bg-blue-100 text-blue-800 text-xs px-2 py-0.5 rounded-full font-semibold">{{ $emergency['type'] ?? 'N/A' }}</span>
                                             </div>
-                                            <div class="text-gray-500">{{ \Illuminate\Support\Str::limit($emergency['name'], 15) }}</div>
+                                            <div class="text-gray-500">{{ \Illuminate\Support\Str::limit($emergency['name'] ?? 'N/A', 15) }}</div>
                                         </div>
                                     @endforeach
                                     @if(count(is_array($route['emergency_locations']) ? $route['emergency_locations'] : []) > 2)
@@ -275,7 +275,7 @@
                                     @if($route['emergency_locations_count'] > 0)
                                         @foreach(array_slice(is_array($route['emergency_locations']) ? $route['emergency_locations'] : [], 0, 2) as $emergency)
                                             <div class="font-mono text-xs bg-gray-100 px-2 py-1 rounded text-gray-700 mb-1">
-                                                [{{ number_format(is_array($emergency['coords']) ? (float)$emergency['coords'][0] : 0, 6) }}, {{ number_format(is_array($emergency['coords']) ? (float)$emergency['coords'][1] : 0, 6) }}] ({{ $emergency['type'] }})
+                                                [{{ number_format(is_array($emergency['coords']) ? (float)$emergency['coords'][0] : 0, 6) }}, {{ number_format(is_array($emergency['coords']) ? (float)$emergency['coords'][1] : 0, 6) }}] ({{ $emergency['type'] ?? 'N/A' }})
                                             </div>
                                         @endforeach
                                     @else

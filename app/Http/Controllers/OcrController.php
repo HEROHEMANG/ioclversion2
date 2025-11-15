@@ -44,12 +44,14 @@ class OcrController extends Controller
             'files' => $request->allFiles()
         ];
 
-        // Return debug info for now
+        // Return debug info for now - COMMENTED OUT TO ENABLE OCR PROCESSING
+        /*
         return response()->json([
             'success' => false,
             'debug' => $debugInfo,
             'message' => 'Debug mode - not processing OCR yet'
         ]);
+        */
 
         $request->validate([
             'image' => 'required|image|mimes:jpeg,png,jpg,gif|max:10240' // 10MB max
@@ -60,8 +62,9 @@ class OcrController extends Controller
             $imagePath = $request->file('image')->store('ocr-uploads', 'public');
             $fullImagePath = storage_path('app/public/' . $imagePath);
 
-            // Initialize Tesseract OCR
+            // Initialize Tesseract OCR with full path
             $ocr = new TesseractOCR($fullImagePath);
+            $ocr->executable('C:\Program Files\Tesseract-OCR\tesseract.exe');
             
             // Configure OCR settings
             $ocr->lang('eng') // English language

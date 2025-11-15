@@ -1126,5 +1126,8 @@ class DatabaseSeeder extends Seeder
                 ],
             ]);
         }
+        
+        // Add all routes from JSON files in the 'json folder' directory
+        $this->call(AddJsonRoutes::class);
     }
 }

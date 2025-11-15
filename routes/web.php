@@ -27,6 +27,10 @@ Route::get('/contact', function () {
 	return view('contact');
 });
 
+Route::get('/add-route', function () {
+	return view('add-route');
+})->name('add-route');
+
 Route::get('/sristi-filling-station', function () {
 	$jsonFilePath = public_path('284860 SRISTI FILLING STATION/dummy text json.txt');
 	$routeData = [];
