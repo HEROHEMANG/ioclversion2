@@ -11,7 +11,7 @@
 		<div class="text-center py-8 sm:py-12 lg:py-16 px-4">
 			<h1 class="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-extrabold tracking-tight text-gray-900 flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-4">
 				<img src="{{ asset('images/iocl.png') }}" alt="IOCL Logo" class="w-16 sm:w-20 md:w-24 lg:w-32 xl:w-40 logo-img">
-				<span class="text-center">Journey Risk Management</span>
+				<span class="text-center">Journey Risk Managementt</span>
 			</h1>
 			<p class="mt-4 text-sm sm:text-base lg:text-lg text-gray-600 max-w-2xl mx-auto px-4">Select a source terminal and destination, then click View Destination to draw the route.</p>
 		</div>
