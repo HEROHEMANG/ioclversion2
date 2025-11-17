@@ -11,7 +11,7 @@
 		<div class="text-center py-8 sm:py-12 lg:py-16 px-4">
 			<h1 class="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-extrabold tracking-tight text-gray-900 flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-4">
 				<img src="{{ asset('images/iocl.png') }}" alt="IOCL Logo" class="w-16 sm:w-20 md:w-24 lg:w-32 xl:w-40 logo-img">
-				<span class="text-center">Journey Risk Managementt</span>
+				<span class="text-center">Journey Risk Management</span>
 			</h1>
 			<p class="mt-4 text-sm sm:text-base lg:text-lg text-gray-600 max-w-2xl mx-auto px-4">Select a source terminal and destination, then click View Destination to draw the route.</p>
 		</div>
@@ -386,9 +386,13 @@
 				                            return `<svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-shield-filled" width="${size}" height="${size}" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M11.998 2.003l.144 .005a12 12 0 0 1 8.232 9.59a12 12 0 0 1 -9.59 12.232l-.144 .005a12 12 0 0 1 -8.232 -9.59a12 12 0 0 1 9.59 -12.232z" fill="#86efac"/></svg>`;
 				
 				                        case 'hospital':
-				
+
 				                            return `<svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-building-hospital" width="${size}" height="${size}" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M3 21l18 0" /><path d="M5 21v-16a2 2 0 0 1 2 -2h10a2 2 0 0 1 2 2v16" /><path d="M9 21v-4a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2v4" /><path d="M10 9l4 0" /><path d="M12 7l0 4" /></svg>`;
-				
+
+				                        case 'pharmacy':
+
+				                            return `<svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-pills" width="${size}" height="${size}" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M8 8m-5 0a5 5 0 1 0 10 0a5 5 0 1 0 -10 0" /><path d="M17 17m-4 0a4 4 0 1 0 8 0a4 4 0 1 0 -8 0" /><path d="M4.5 4.5l7 7" /><path d="M19.5 14.5l-5 5" /></svg>`;
+
 				                        case 'police':
 				
 				                            return `<svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-shield-half-filled" width="${size}" height="${size}" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M12 3a12 12 0 0 0 -8.5 15a12 12 0 0 0 8.5 3a12 12 0 0 0 8.5 -15a12 12 0 0 0 -8.5 -3z" fill="#3b82f6" /><path d="M12 3v18" fill="#3b82f6" /><path d="M12 3a12 12 0 0 1 8.5 15a12 12 0 0 1 -8.5 3" fill="#2563eb" /></svg>`;
@@ -402,15 +406,23 @@
 				                            return `<svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-building-community" width="${size}" height="${size}" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M8 9l5 5v7h-5v-4m0 4h-5v-7l5 -5m1 1v-6a1 1 0 0 1 1 -1h10a1 1 0 0 1 1 1v17h-8" /><path d="M13 7l0 .01" /><path d="M17 7l0 .01" /><path d="M17 11l0 .01" /><path d="M17 15l0 .01" /></svg>`;
 				
 				                        case 'market':
-				
+
 				                            return `<svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-building-store" width="${size}" height="${size}" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M3 21l18 0" /><path d="M3 7v1a3 3 0 0 0 6 0v-1m0 1a3 3 0 0 0 6 0v-1m0 1a3 3 0 0 0 6 0v-1h-18l2 -4h14l2 4" /><path d="M5 21l0 -10.15" /><path d="M19 21l0 -10.15" /><path d="M9 21v-4a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2v4" /></svg>`;
-				
+
+				                        case 'university':
+
+				                            return `<svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-building-community" width="${size}" height="${size}" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M8 9l5 5v7h-5v-4m0 4h-5v-7l5 -5m1 1v-6a1 1 0 0 1 1 -1h10a1 1 0 0 1 1 1v17h-8" /><path d="M13 7l0 .01" /><path d="M17 7l0 .01" /><path d="M17 11l0 .01" /><path d="M17 15l0 .01" /></svg>`;
+
+				                        case 'crossing':
+
+				                            return `<svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-route" width="${size}" height="${size}" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M3 19a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" /><path d="M19 7a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" /><path d="M11 19h5.5a3.5 3.5 0 0 0 0 -7h-8a3.5 3.5 0 0 1 0 -7h4.5" /></svg>`;
+
 				                        case 'petrol':
-				
+
 				                            return `<svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-gas-station" width="${size}" height="${size}" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M14 11h1a2 2 0 0 1 2 2v3a1.5 1.5 0 0 0 3 0v-7l-3 -3" /><path d="M4 20v-14a2 2 0 0 1 2 -2h6a2 2 0 0 1 2 2v14" /><path d="M4 11h10" /><path d="M10 11v-5a1 1 0 0 0 -1 -1h-4a1 1 0 0 0 -1 1v5" /><path d="M4 15h10" /></svg>`;
-				
+
 										default:
-				
+
 											return `<div style="width: ${size}px; height: ${size}px; background: #3b82f6; border-radius: 50%;"></div>`;
 				
 									}
@@ -455,6 +467,8 @@
 					const typeLower = (spot.type || '').toLowerCase();
 					if (typeLower.includes('school')) iconType = 'school';
 					else if (typeLower.includes('college')) iconType = 'college';
+					else if (typeLower.includes('university')) iconType = 'university';
+					else if (typeLower.includes('crossing')) iconType = 'crossing';
 					else if (typeLower.includes('market')) iconType = 'market';
 					
 					const icon = L.divIcon({
@@ -474,8 +488,8 @@
 					let iconType = 'hospital'; // default
 					const typeLower = (location.type || '').toLowerCase();
 					if (typeLower.includes('hospital') || typeLower.includes('clinic')) iconType = 'hospital';
+					else if (typeLower.includes('pharmacy')) iconType = 'pharmacy';
 					else if (typeLower.includes('police')) iconType = 'police';
-					else if (typeLower.includes('pharmacy')) iconType = 'hospital'; // Use hospital icon for pharmacy
 					else if (typeLower.includes('petrol') || typeLower.includes('pump')) iconType = 'petrol';
 					
 					const icon = L.divIcon({
@@ -739,6 +753,10 @@
 							return `<div class="w-10 h-10 sm:w-12 sm:h-12 rounded-lg bg-purple-500 flex items-center justify-center shadow-md">
 								<span class="text-white font-bold text-lg sm:text-xl">H</span>
 							</div>`;
+						case 'pharmacy':
+							return `<div class="w-10 h-10 sm:w-12 sm:h-12 rounded-lg bg-pink-500 flex items-center justify-center shadow-md">
+								<span class="text-white font-bold text-lg sm:text-xl">P</span>
+							</div>`;
 						case 'police':
 							return `<div class="w-10 h-10 sm:w-12 sm:h-12 rounded-lg bg-blue-600 flex items-center justify-center shadow-md">
 								<span class="text-white font-bold text-lg sm:text-xl">P</span>
@@ -758,6 +776,14 @@
 						case 'petrol':
 							return `<div class="w-10 h-10 sm:w-12 sm:h-12 rounded-lg bg-yellow-600 flex items-center justify-center shadow-md">
 								<span class="text-white font-bold text-lg sm:text-xl">P</span>
+							</div>`;
+						case 'university':
+							return `<div class="w-10 h-10 sm:w-12 sm:h-12 rounded-lg bg-indigo-600 flex items-center justify-center shadow-md">
+								<span class="text-white font-bold text-lg sm:text-xl">U</span>
+							</div>`;
+						case 'crossing':
+							return `<div class="w-10 h-10 sm:w-12 sm:h-12 rounded-lg bg-red-600 flex items-center justify-center shadow-md">
+								<span class="text-white font-bold text-lg sm:text-xl">X</span>
 							</div>`;
 						default:
 							return `<div class="w-10 h-10 sm:w-12 sm:h-12 rounded-lg bg-gray-500 flex items-center justify-center shadow-md">
@@ -795,6 +821,12 @@
 					if (crowdedSpots.some(s => (s.type || '').toLowerCase().includes('college'))) {
 						addLegendItem('college', createIconHTML('college'), 'College', 'कॉलेज');
 					}
+					if (crowdedSpots.some(s => (s.type || '').toLowerCase().includes('university'))) {
+						addLegendItem('university', createIconHTML('university'), 'University', 'विश्वविद्यालय');
+					}
+					if (crowdedSpots.some(s => (s.type || '').toLowerCase().includes('crossing'))) {
+						addLegendItem('crossing', createIconHTML('crossing'), 'Crossing', 'क्रॉसिंग');
+					}
 					if (crowdedSpots.some(s => (s.type || '').toLowerCase().includes('market'))) {
 						addLegendItem('market', createIconHTML('market'), 'Market Place', 'बाज़ार स्थान');
 					}
@@ -804,6 +836,9 @@
 				if (emergencyLocations && emergencyLocations.length > 0) {
 					if (emergencyLocations.some(l => (l.type || '').toLowerCase().includes('hospital') || (l.type || '').toLowerCase().includes('clinic'))) {
 						addLegendItem('hospital', createIconHTML('hospital'), 'Hospital / Clinic', 'अस्पताल');
+					}
+					if (emergencyLocations.some(l => (l.type || '').toLowerCase().includes('pharmacy'))) {
+						addLegendItem('pharmacy', createIconHTML('pharmacy'), 'Pharmacy', 'फार्मेसी');
 					}
 					if (emergencyLocations.some(l => (l.type || '').toLowerCase().includes('police'))) {
 						addLegendItem('police', createIconHTML('police'), 'Police', 'पुलिस');

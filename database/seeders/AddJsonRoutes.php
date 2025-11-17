@@ -139,20 +139,60 @@ class AddJsonRoutes extends Seeder
             $filename = basename($file);
             
             // Extract route name by removing suffixes (Risk, CROWDED, EMERGENCY, etc.)
-            $routeName = preg_replace('/\s*(Route\s+(Summary|summary|summery|SUmmary)|Route\s+Risk|Route\s+Emergency|Route\s+Crowded|Route Summary|Route summary|Route summery|Route SUmmary|summary|Crowded spot|crowded spot|Crowded|Croweded|Emergancy|Emargancy|Emarganncy|Emmargancy|Emergncy|Emargency|Emergency|Risk\s+\d+|Risk|risk|EMERGANCY|CROWDED|ROUTE SUMMARY)\s*\.json$/i', '', $filename);
-            $routeName = preg_replace('/\.json$/i', '', $routeName);
+            // Handle patterns like "RISK 1 .json", "CROWDED .json", "ROUTE SUMMARY .json"
+            // Also handle typos: EMERGAENCY, EMERGEENCY, EMEARGENCY, SEMMERY, SUMARY, SAMMARY
+            // Remove .json extension first
+            $routeName = preg_replace('/\.json$/i', '', $filename);
+            
+            // Remove common suffixes (handle multiple in sequence and typos)
+            // Pattern: (ROUTE\s+)?(RISK\s*\d*|CROWDED|EMERGENCY|SUMMARY|etc.) with typos
+            $suffixes = [
+                // Route prefixes with suffixes
+                '/\s*Route\s+(Summary|summary|summery|SUmmary|SEMMERY|SUMARY|SAMMARY|summery|sumary|sammary)\s*$/i',
+                '/\s*Route\s+(Risk|risk|RISK)\s*\d*\s*$/i',
+                '/\s*Route\s+(Emergency|emergency|EMERGENCY|Emergancy|Emargancy|Emarganncy|Emmargancy|Emergncy|Emargency|Emmemergency|EMERGAENCY|EMERGEENCY|EMEARGENCY|EMMERGENCY)\s*$/i',
+                '/\s*Route\s+(Crowded|crowded|CROWDED|Croweded|Crawded|CRAWDED)\s*$/i',
+                // Standalone suffixes
+                '/\s*(Summary|summary|summery|SUmmary|SEMMERY|SUMARY|SAMMARY|summery|sumary|sammary)\s*$/i',
+                '/\s*(Risk|risk|RISK)\s*\d*\s*(Emergency|emergency|EMERGENCY|Emergancy|Emargancy|Emarganncy|Emmargancy|Emergncy|Emargency|Emmemergency|EMERGAENCY|EMERGEENCY|EMEARGENCY|EMMERGENCY)?\s*$/i',
+                '/\s*(Emergency|emergency|EMERGENCY|Emergancy|Emargancy|Emarganncy|Emmargancy|Emergncy|Emargency|Emmemergency|EMERGAENCY|EMERGEENCY|EMEARGENCY|EMMERGENCY)\s*$/i',
+                '/\s*(Crowded|crowded|CROWDED|Croweded|Crawded|CRAWDED|Crowded spot|crowded spot)\s*$/i',
+            ];
+            
+            // Apply all suffix patterns (may need multiple passes for compound suffixes)
+            foreach ($suffixes as $pattern) {
+                $routeName = preg_replace($pattern, '', $routeName);
+            }
+            
+            // Remove standalone "ROUTE" at the end (if it wasn't part of a compound suffix)
+            $routeName = preg_replace('/\s+Route\s*$/i', '', $routeName);
+            
+            // Remove trailing dots and spaces
+            $routeName = preg_replace('/[\.\s]+$/', '', $routeName);
             $routeName = trim($routeName);
             
             // Normalize route name - remove extra spaces
             $routeName = preg_replace('/\s+/', ' ', $routeName);
             
+            // Normalize case variations and handle common abbreviations
+            // Convert to uppercase for consistency, but preserve the original casing for display
+            $normalizedRouteName = strtoupper($routeName);
+            // Handle common variations: "STN" -> "STATION", "FILLING STN" -> "FILLING STATION"
+            $normalizedRouteName = preg_replace('/\bSTN\b/', 'STATION', $normalizedRouteName);
+            $normalizedRouteName = preg_replace('/\s+/', ' ', $normalizedRouteName);
+            
+            // Use normalized name as key for merging, but keep original for display
+            $routeKey = $normalizedRouteName;
+            
             if (empty($routeName)) {
                 continue;
             }
             
-            if (!isset($routeMap[$routeName])) {
-                $routeMap[$routeName] = [
-                    'name' => $routeName,
+            // Use normalized key for merging routes with case variations
+            // But keep the first encountered properly-cased name for display
+            if (!isset($routeMap[$routeKey])) {
+                $routeMap[$routeKey] = [
+                    'name' => $routeName, // Keep original casing for display
                     'source' => 'Rajbandh Terminal',
                     'destination' => $routeName,
                     'start_coords' => [23.4764, 87.3975], // Default start coordinates
@@ -164,6 +204,13 @@ class AddJsonRoutes extends Seeder
                     'crowded_spots' => [],
                     'emergency_locations' => [],
                 ];
+            } else {
+                // If we find a better-cased version, use it (prefer mixed case over all uppercase)
+                $currentName = $routeMap[$routeKey]['name'];
+                if (strtoupper($currentName) === $currentName && strtoupper($routeName) !== $routeName) {
+                    $routeMap[$routeKey]['name'] = $routeName;
+                    $routeMap[$routeKey]['destination'] = $routeName;
+                }
             }
             
             // Parse the file content
@@ -173,6 +220,10 @@ class AddJsonRoutes extends Seeder
                 echo "WARNING: Could not read file: {$filename}\n";
                 continue;
             }
+            
+            // Fix trailing commas in JSON (common issue)
+            $fileContent = preg_replace('/,\s*}/', '}', $fileContent);
+            $fileContent = preg_replace('/,\s*]/', ']', $fileContent);
             
             $content = json_decode($fileContent, true);
             
@@ -190,41 +241,51 @@ class AddJsonRoutes extends Seeder
             if (stripos($filename, 'Route Summary') !== false || stripos($filename, 'summary') !== false) {
                 // Parse route summary - handle both naming conventions
                 if (isset($content['start_latitude']) && isset($content['start_longitude'])) {
-                    $routeMap[$routeName]['start_coords'] = [$content['start_latitude'], $content['start_longitude']];
+                    $routeMap[$routeKey]['start_coords'] = [$content['start_latitude'], $content['start_longitude']];
                 } elseif (isset($content['route_summary_start_latitude']) && isset($content['route_summary_start_longitude'])) {
-                    $routeMap[$routeName]['start_coords'] = [$content['route_summary_start_latitude'], $content['route_summary_start_longitude']];
+                    $routeMap[$routeKey]['start_coords'] = [$content['route_summary_start_latitude'], $content['route_summary_start_longitude']];
                 } elseif (isset($content['start_coordinates'])) {
                     $coords = $this->parseCoordinates($content['start_coordinates']);
                     if ($coords) {
-                        $routeMap[$routeName]['start_coords'] = $coords;
+                        $routeMap[$routeKey]['start_coords'] = $coords;
                     }
                 }
                 
                 if (isset($content['end_latitude']) && isset($content['end_longitude'])) {
-                    $routeMap[$routeName]['end_coords'] = [$content['end_latitude'], $content['end_longitude']];
+                    $routeMap[$routeKey]['end_coords'] = [$content['end_latitude'], $content['end_longitude']];
                 } elseif (isset($content['route_summary_end_latitude']) && isset($content['route_summary_end_longitude'])) {
-                    $routeMap[$routeName]['end_coords'] = [$content['route_summary_end_latitude'], $content['route_summary_end_longitude']];
+                    $routeMap[$routeKey]['end_coords'] = [$content['route_summary_end_latitude'], $content['route_summary_end_longitude']];
                 } elseif (isset($content['end_coordinates'])) {
                     $coords = $this->parseCoordinates($content['end_coordinates']);
                     if ($coords) {
-                        $routeMap[$routeName]['end_coords'] = $coords;
+                        $routeMap[$routeKey]['end_coords'] = $coords;
                     }
                 }
                 
                 // Parse route summary details
+                // Handle both field name formats: total_distance_km or total_distance
                 if (isset($content['total_distance_km'])) {
-                    $routeMap[$routeName]['total_distance_km'] = floatval($content['total_distance_km']);
+                    $routeMap[$routeKey]['total_distance_km'] = floatval($content['total_distance_km']);
+                } elseif (isset($content['total_distance'])) {
+                    $routeMap[$routeKey]['total_distance_km'] = floatval($content['total_distance']);
                 }
                 
+                // Handle both field name formats: estimated_duration_hours or estimated_duration
                 if (isset($content['estimated_duration_hours'])) {
-                    $routeMap[$routeName]['estimated_duration_hours'] = floatval($content['estimated_duration_hours']);
+                    $routeMap[$routeKey]['estimated_duration_hours'] = floatval($content['estimated_duration_hours']);
+                } elseif (isset($content['estimated_duration'])) {
+                    $routeMap[$routeKey]['estimated_duration_hours'] = floatval($content['estimated_duration']);
                 }
                 
+                // Handle both field name formats: adjusted_duration_heavy_vehicle_hours or adjusted_duration_heavy_vehicle
                 if (isset($content['adjusted_duration_heavy_vehicle_hours'])) {
-                    $routeMap[$routeName]['adjusted_duration_heavy_vehicle_hours'] = floatval($content['adjusted_duration_heavy_vehicle_hours']);
+                    $routeMap[$routeKey]['adjusted_duration_heavy_vehicle_hours'] = floatval($content['adjusted_duration_heavy_vehicle_hours']);
+                } elseif (isset($content['adjusted_duration_heavy_vehicle'])) {
+                    $routeMap[$routeKey]['adjusted_duration_heavy_vehicle_hours'] = floatval($content['adjusted_duration_heavy_vehicle']);
                 }
-            } elseif (stripos($filename, 'Risk') !== false && !preg_match('/\.png$/i', $filename)) {
+            } elseif (stripos($filename, 'Risk') !== false && !preg_match('/\.png$/i', $filename) && stripos($filename, 'Emergency') === false && stripos($filename, 'EMERGENCY') === false && stripos($filename, 'EMERGAENCY') === false && stripos($filename, 'EMERGEENCY') === false && stripos($filename, 'EMEARGENCY') === false && stripos($filename, 'EMMERGENCY') === false && stripos($filename, 'Crowded') === false && stripos($filename, 'CROWDED') === false && stripos($filename, 'Croweded') === false && stripos($filename, 'Crawded') === false && stripos($filename, 'CRAWDED') === false && stripos($filename, 'crowded') === false) {
                 // Parse risk points (handles "Risk", "Risk 1", "Risk 2", etc.)
+                // Exclude files that are emergency files (e.g., "RISK EMERGENCY")
                 $riskPoints = $this->parseRiskPoints($content);
                 
                 if (empty($riskPoints)) {
@@ -233,7 +294,7 @@ class AddJsonRoutes extends Seeder
                     // Remove duplicates based on coordinates before merging
                     $existingCoords = array_map(function($point) {
                         return $this->formatCoordinateKey($point['coords']);
-                    }, $routeMap[$routeName]['risk_points']);
+                    }, $routeMap[$routeKey]['risk_points']);
                     
                     $newRiskPoints = array_filter($riskPoints, function($point) use ($existingCoords) {
                         $coordKey = $this->formatCoordinateKey($point['coords']);
@@ -245,17 +306,20 @@ class AddJsonRoutes extends Seeder
                         echo "INFO: Removed {$duplicateCount} duplicate risk point(s) from {$filename}\n";
                     }
                     
-                    $routeMap[$routeName]['risk_points'] = array_merge($routeMap[$routeName]['risk_points'], $newRiskPoints);
+                    $routeMap[$routeKey]['risk_points'] = array_merge($routeMap[$routeKey]['risk_points'], $newRiskPoints);
                 }
-            } elseif (stripos($filename, 'Crowded') !== false || stripos($filename, 'Croweded') !== false || stripos($filename, 'crowded') !== false || stripos($filename, 'CROWDED') !== false) {
+            } elseif (stripos($filename, 'Crowded') !== false || stripos($filename, 'Croweded') !== false || stripos($filename, 'Crawded') !== false || stripos($filename, 'CRAWDED') !== false || stripos($filename, 'crowded') !== false || stripos($filename, 'CROWDED') !== false) {
                 // Parse crowded spots
                 $crowdedSpots = $this->parseCrowdedSpots($content);
-                $routeMap[$routeName]['crowded_spots'] = array_merge($routeMap[$routeName]['crowded_spots'], $crowdedSpots);
-            } elseif (stripos($filename, 'Emergancy') !== false || stripos($filename, 'Emargancy') !== false || stripos($filename, 'Emarganncy') !== false || stripos($filename, 'Emergncy') !== false || stripos($filename, 'Emmargancy') !== false || stripos($filename, 'Emargency') !== false || stripos($filename, 'emergency') !== false || stripos($filename, 'EMERGENCY') !== false) {
+                if (empty($crowdedSpots)) {
+                    echo "WARNING: No crowded spots found in file: {$filename}\n";
+                }
+                $routeMap[$routeKey]['crowded_spots'] = array_merge($routeMap[$routeKey]['crowded_spots'], $crowdedSpots);
+            } elseif (stripos($filename, 'Emergancy') !== false || stripos($filename, 'Emargancy') !== false || stripos($filename, 'Emarganncy') !== false || stripos($filename, 'Emergncy') !== false || stripos($filename, 'Emmargancy') !== false || stripos($filename, 'Emargency') !== false || stripos($filename, 'Emmemergency') !== false || stripos($filename, 'EMERGAENCY') !== false || stripos($filename, 'EMERGEENCY') !== false || stripos($filename, 'EMEARGENCY') !== false || stripos($filename, 'EMMERGENCY') !== false || stripos($filename, 'emergency') !== false || stripos($filename, 'EMERGENCY') !== false) {
                 // Parse emergency locations (skip actual PNG files)
                 if (!preg_match('/\.png$/i', $filename)) {
                     $emergencyLocations = $this->parseEmergencyLocations($content);
-                    $routeMap[$routeName]['emergency_locations'] = array_merge($routeMap[$routeName]['emergency_locations'], $emergencyLocations);
+                    $routeMap[$routeKey]['emergency_locations'] = array_merge($routeMap[$routeKey]['emergency_locations'], $emergencyLocations);
                 }
             }
         }
@@ -285,40 +349,9 @@ class AddJsonRoutes extends Seeder
         $riskPoints = [];
         
         foreach ($data as $key => $value) {
-            // Handle coordinates field format (Risk 1, with item_X_coordinates)
-            if (strpos($key, 'coordinates') !== false || strpos($key, 'coordinate') !== false || strpos($key, 'Coordinates') !== false) {
-                $index = $this->extractIndex($key);
-                
-                // Get risk level, speed, and type
-                $riskLevel = 'Medium';
-                $speed = '30 KM/Hr';
-                $riskType = 'Turn';
-                
-                foreach ($data as $k => $v) {
-                    if ($this->extractIndex($k) == $index) {
-                        if (strpos($k, 'risk_level') !== false || strpos($k, 'risk_risk') !== false || strpos($k, 'category') !== false || strpos($k, 'Risk Level') !== false) {
-                            $riskLevel = $v;
-                        } elseif (strpos($k, 'speed_limit') !== false || strpos($k, '_speed') !== false || strpos($k, 'Speed Limit') !== false) {
-                            $speed = is_numeric($v) ? $v . ' KM/Hr' : $v;
-                        } elseif (strpos($k, 'risk_type') !== false || strpos($k, 'Risk Type') !== false) {
-                            $riskType = $v;
-                        }
-                    }
-                }
-                
-                // Parse coordinates
-                $coords = $this->parseCoordinates($value);
-                if ($coords) {
-                    $riskPoints[] = [
-                        'coords' => $coords,
-                        'risk' => $riskLevel === 'Blind Spot' ? 'Blind Spot' : $riskLevel,
-                        'speed' => $speed,
-                        'type' => $riskType
-                    ];
-                }
-            }
-            // Handle latitude/longitude format (Risk 2, with row_X_latitude)
-            elseif (strpos($key, '_latitude') !== false) {
+            // Handle latitude/longitude format FIRST (Risk 2, with row_X_latitude or coordinate_latitude_X)
+            // This must come before the 'coordinate' check to avoid false matches
+            if (strpos($key, '_latitude') !== false) {
                 $index = $this->extractIndex($key);
                 
                 // Get corresponding longitude
@@ -331,12 +364,17 @@ class AddJsonRoutes extends Seeder
                     if ($this->extractIndex($k) == $index) {
                         if (strpos($k, '_longitude') !== false) {
                             $longitude = $v;
-                        } elseif (strpos($k, 'category') !== false || strpos($k, 'risk_level') !== false) {
+                        } elseif (strpos($k, 'category') !== false || strpos($k, 'risk_level') !== false || strpos($k, 'level_') !== false) {
                             $riskLevel = $v;
-                        } elseif (strpos($k, '_speed') !== false || strpos($k, 'speed_limit') !== false) {
-                            $speedUnit = $data["row_{$index}_speed_unit"] ?? 'KM/Hr';
-                            $speed = is_numeric($v) ? $v . ' ' . $speedUnit : $v;
-                        } elseif (strpos($k, 'risk_type') !== false) {
+                        } elseif (strpos($k, '_speed') !== false || strpos($k, 'speed_limit') !== false || strpos($k, 'speed_km_hr_') !== false) {
+                            // Handle speed_km_hr_X format
+                            if (strpos($k, 'speed_km_hr_') !== false) {
+                                $speed = is_numeric($v) ? $v . ' KM/Hr' : $v;
+                            } else {
+                                $speedUnit = $data["row_{$index}_speed_unit"] ?? 'KM/Hr';
+                                $speed = is_numeric($v) ? $v . ' ' . $speedUnit : $v;
+                            }
+                        } elseif (strpos($k, 'risk_type') !== false || strpos($k, 'type_') !== false) {
                             $riskType = $v;
                         }
                     }
@@ -347,6 +385,39 @@ class AddJsonRoutes extends Seeder
                     $riskPoints[] = [
                         'coords' => $coords,
                         'risk' => $riskLevel,
+                        'speed' => $speed,
+                        'type' => $riskType
+                    ];
+                }
+            }
+            // Handle coordinates field format (Risk 1, with item_X_coordinates)
+            // Check for full word 'coordinates' to avoid matching 'coordinate_latitude'
+            elseif (preg_match('/\bcoordinates\b/i', $key) || (stripos($key, 'coordinate') !== false && strpos($key, '_latitude') === false && strpos($key, '_longitude') === false)) {
+                $index = $this->extractIndex($key);
+                
+                // Get risk level, speed, and type
+                $riskLevel = 'Medium';
+                $speed = '30 KM/Hr';
+                $riskType = 'Turn';
+                
+                foreach ($data as $k => $v) {
+                    if ($this->extractIndex($k) == $index) {
+                        if (stripos($k, 'risk_level') !== false || stripos($k, 'risk_risk') !== false || stripos($k, 'category') !== false || stripos($k, 'risk level') !== false) {
+                            $riskLevel = $v;
+                        } elseif (stripos($k, 'speed_limit') !== false || stripos($k, '_speed') !== false || stripos($k, 'speed limit') !== false) {
+                            $speed = is_numeric($v) ? $v . ' KM/Hr' : $v;
+                        } elseif (stripos($k, 'risk_type') !== false || stripos($k, 'risk type') !== false) {
+                            $riskType = $v;
+                        }
+                    }
+                }
+                
+                // Parse coordinates
+                $coords = $this->parseCoordinates($value);
+                if ($coords) {
+                    $riskPoints[] = [
+                        'coords' => $coords,
+                        'risk' => $riskLevel === 'Blind Spot' ? 'Blind Spot' : $riskLevel,
                         'speed' => $speed,
                         'type' => $riskType
                     ];
@@ -376,7 +447,55 @@ class AddJsonRoutes extends Seeder
             return $crowdedSpots;
         }
         
-        // Handle array format (with item_X_ prefix)
+        // Handle latitude/longitude format FIRST (e.g., row_X_latitude, row_X_longitude)
+        foreach ($data as $key => $value) {
+            if (strpos($key, '_latitude') !== false && (strpos($key, 'location_') === false)) {
+                $index = $this->extractIndex($key);
+                
+                // Get corresponding longitude
+                $longitude = null;
+                $type = 'school';
+                $name = '';
+                $speed = '30 km/h';
+                $risk = 'Medium';
+                
+                foreach ($data as $k => $v) {
+                    if ($this->extractIndex($k) == $index) {
+                        if (strpos($k, '_longitude') !== false) {
+                            $longitude = $v;
+                        } elseif (strpos($k, '_type') !== false) {
+                            $type = $v;
+                        } elseif (strpos($k, '_name') !== false) {
+                            $name = $v;
+                        } elseif (strpos($k, 'speed_limit') !== false || strpos($k, 'speed_') !== false) {
+                            $speed = is_numeric($v) ? $v . ' km/h' : $v;
+                        } elseif (strpos($k, 'risk_level') !== false || strpos($k, 'risk_') !== false) {
+                            $risk = $v;
+                        }
+                    }
+                }
+                
+                if ($longitude !== null && $name) {
+                    $coords = [floatval($value), floatval($longitude)];
+                    if ($this->isValidCoordinate($coords[0], $coords[1])) {
+                        $crowdedSpots[] = [
+                            'coords' => $coords,
+                            'type' => $type ?: 'school',
+                            'name' => $name,
+                            'speed' => $speed,
+                            'risk' => $risk
+                        ];
+                    }
+                }
+            }
+        }
+        
+        // If we already found spots using latitude/longitude format, return them
+        if (!empty($crowdedSpots)) {
+            return $crowdedSpots;
+        }
+        
+        // Handle array format (with item_X_ prefix and coordinates field)
         foreach ($data as $key => $value) {
             if (strpos($key, 'coordinates') !== false) {
                 $index = $this->extractIndex($key);
@@ -388,13 +507,14 @@ class AddJsonRoutes extends Seeder
                 
                 foreach ($data as $k => $v) {
                     if ($this->extractIndex($k) == $index) {
-                        if (strpos($k, '_type') !== false) {
+                        // Handle both _type/type_ and _name/name_ formats
+                        if (strpos($k, '_type') !== false || preg_match('/^type_\d+/', $k)) {
                             $type = $v;
-                        } elseif (strpos($k, '_name') !== false) {
+                        } elseif (strpos($k, '_name') !== false || preg_match('/^name_\d+/', $k)) {
                             $name = $v;
-                        } elseif (strpos($k, 'speed_limit') !== false) {
+                        } elseif (strpos($k, 'speed_limit') !== false || preg_match('/^speed_limit_\d+/', $k)) {
                             $speed = is_numeric($v) ? $v . ' km/h' : $v;
-                        } elseif (strpos($k, 'risk_level') !== false) {
+                        } elseif (strpos($k, 'risk_level') !== false || preg_match('/^risk_level_\d+/', $k)) {
                             $risk = $v;
                         }
                     }
@@ -435,9 +555,58 @@ class AddJsonRoutes extends Seeder
             return $emergencyLocations;
         }
         
-        // Handle format with row_X_ prefix
+        // Handle latitude/longitude format FIRST (e.g., location_X_latitude, location_X_longitude)
         foreach ($data as $key => $value) {
-            if (strpos($key, 'coordinates') !== false) {
+            if (strpos($key, '_latitude') !== false) {
+                $index = $this->extractIndex($key);
+                
+                // Get corresponding longitude
+                $longitude = null;
+                $type = 'hospital';
+                $name = '';
+                $speed = '30 km/h';
+                $risk = 'Medium';
+                
+                foreach ($data as $k => $v) {
+                    if ($this->extractIndex($k) == $index) {
+                        if (strpos($k, '_longitude') !== false) {
+                            $longitude = $v;
+                        } elseif (strpos($k, '_type') !== false || (strpos($k, 'type_') !== false && strpos($k, 'risk') === false)) {
+                            $type = $v;
+                        } elseif (strpos($k, '_name') !== false || strpos($k, 'name_') !== false) {
+                            $name = $v;
+                        } elseif (strpos($k, 'speed_limit') !== false || strpos($k, 'speed_') !== false) {
+                            $speed = is_numeric($v) ? $v . ' km/h' : $v;
+                        } elseif (strpos($k, 'risk_level') !== false || strpos($k, 'risk_') !== false) {
+                            $risk = $v;
+                        }
+                    }
+                }
+                
+                if ($longitude !== null && $name) {
+                    $coords = [floatval($value), floatval($longitude)];
+                    if ($this->isValidCoordinate($coords[0], $coords[1])) {
+                        $emergencyLocations[] = [
+                            'coords' => $coords,
+                            'type' => $type ?: 'hospital',
+                            'name' => $name,
+                            'speed' => $speed,
+                            'risk' => $risk
+                        ];
+                    }
+                }
+            }
+        }
+        
+        // If we already found locations using latitude/longitude format, return them
+        if (!empty($emergencyLocations)) {
+            return $emergencyLocations;
+        }
+        
+        // Handle format with row_X_ prefix and coordinates field
+        // Also handle entry_X_ format (e.g., entry_0_coordinates, entry_0_name, entry_0_type)
+        foreach ($data as $key => $value) {
+            if (strpos($key, 'coordinates') !== false || (strpos($key, 'entry_') !== false && strpos($key, 'coordinates') !== false)) {
                 $index = $this->extractIndex($key);
                 
                 $type = '';
@@ -448,13 +617,14 @@ class AddJsonRoutes extends Seeder
                 // Get other fields for the same index
                 foreach ($data as $k => $v) {
                     if ($this->extractIndex($k) == $index) {
-                        if (strpos($k, '_type') !== false) {
+                        // Handle entry_X_type, entry_X_name, etc.
+                        if (strpos($k, '_type') !== false || (strpos($k, 'type_') !== false && strpos($k, 'risk') === false) || (strpos($k, 'entry_') !== false && strpos($k, '_type') !== false)) {
                             $type = $v;
-                        } elseif (strpos($k, '_name') !== false) {
+                        } elseif (strpos($k, '_name') !== false || strpos($k, 'name_') !== false || (strpos($k, 'entry_') !== false && strpos($k, '_name') !== false)) {
                             $name = $v;
-                        } elseif (strpos($k, 'speed_limit') !== false) {
+                        } elseif (strpos($k, 'speed_limit') !== false || strpos($k, 'speed_') !== false || (strpos($k, 'entry_') !== false && strpos($k, 'speed') !== false)) {
                             $speed = is_numeric($v) ? $v . ' km/h' : $v;
-                        } elseif (strpos($k, 'risk_level') !== false) {
+                        } elseif (strpos($k, 'risk_level') !== false || strpos($k, 'risk_') !== false || (strpos($k, 'entry_') !== false && strpos($k, 'risk') !== false)) {
                             $risk = $v;
                         }
                     }
@@ -487,6 +657,10 @@ class AddJsonRoutes extends Seeder
             }
             return null;
         } elseif (is_string($value)) {
+            $value = trim($value);
+            
+            // Remove parentheses if present: "(23.4764, 87.3975)" -> "23.4764, 87.3975"
+            $value = preg_replace('/^\(|\)$/', '', $value);
             $value = trim($value);
             
             // Handle newline-separated coordinates
